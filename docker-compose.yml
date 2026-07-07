@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: sicim-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sicim
+      POSTGRES_USER: sicim
+      POSTGRES_PASSWORD: sicim_dev_pass
+    ports:
+      - '5432:5432'
+    volumes:
+      - sicim_pgdata:/var/lib/postgresql/data
+
+volumes:
+  sicim_pgdata:
