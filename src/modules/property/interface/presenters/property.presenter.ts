@@ -1,6 +1,16 @@
 import { Property } from '../../domain/entities/property.entity';
+import { PagedResult } from '../../domain/repositories/property.repository';
 
 export class PropertyPresenter {
+  static toHttpList(page: PagedResult<Property>) {
+    return {
+      data: page.data.map(PropertyPresenter.toHttp),
+      total: page.total,
+      page: page.page,
+      pageSize: page.pageSize,
+    };
+  }
+
   static toHttp(property: Property) {
     return {
       id: property.id,
