@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuditLogModule } from '../audit-log/audit-log.module';
+import { AuthModule } from '../auth/auth.module';
+import { ManagingUnitModule } from '../managing-unit/managing-unit.module';
 import { ApprovePropertyUseCase } from './application/use-cases/approve-property.use-case';
 import { DeactivatePropertyUseCase } from './application/use-cases/deactivate-property.use-case';
 import { GetPropertyUseCase } from './application/use-cases/get-property.use-case';
@@ -11,7 +14,12 @@ import { PropertyOrmEntity } from './infrastructure/persistence/property.orm-ent
 import { PropertyController } from './interface/controllers/property.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PropertyOrmEntity])],
+  imports: [
+    TypeOrmModule.forFeature([PropertyOrmEntity]),
+    AuthModule,
+    ManagingUnitModule,
+    AuditLogModule,
+  ],
   controllers: [PropertyController],
   providers: [
     RegisterPropertyUseCase,

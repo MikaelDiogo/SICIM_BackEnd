@@ -1,5 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { AuditAction } from '../../../audit-log/domain/enums/audit-action.enum';
+import { AuditLogService } from '../../../audit-log/application/services/audit-log.service';
+import type { IManagingUnitRepository } from '../../../managing-unit/domain/repositories/managing-unit.repository';
+import { MANAGING_UNIT_REPOSITORY } from '../../../managing-unit/domain/repositories/managing-unit.repository';
+import { ManagingUnitNotFoundError } from '../../../managing-unit/domain/errors/managing-unit-not-found.error';
 import { PossessionContract } from '../../domain/entities/possession-contract.entity';
 import { Property } from '../../domain/entities/property.entity';
 import { DuplicateRegistrationNumberError } from '../../domain/errors/duplicate-registration-number.error';
@@ -11,12 +16,16 @@ import { RegistrationNumber } from '../../domain/value-objects/registration-numb
 import { MonetaryValue } from '../../domain/value-objects/monetary-value.vo';
 import { PossessionType } from '../../domain/enums/possession-type.enum';
 import { RegisterPropertyDto } from '../dto/register-property.dto';
+import { toAuditSnapshot } from './property-audit-snapshot';
 
 @Injectable()
 export class RegisterPropertyUseCase {
   constructor(
     @Inject(PROPERTY_REPOSITORY)
     private readonly propertyRepository: IPropertyRepository,
+    @Inject(MANAGING_UNIT_REPOSITORY)
+    private readonly managingUnitRepository: IManagingUnitRepository,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async execute(dto: RegisterPropertyDto, createdById: string): Promise<Property> {
@@ -27,6 +36,11 @@ export class RegisterPropertyUseCase {
     );
     if (alreadyExists) {
       throw new DuplicateRegistrationNumberError(registrationNumber.value);
+    }
+
+    const managingUnit = await this.managingUnitRepository.findById(dto.managingUnitId);
+    if (!managingUnit) {
+      throw new ManagingUnitNotFoundError(dto.managingUnitId);
     }
 
     const address = Address.create({
@@ -74,6 +88,16 @@ export class RegisterPropertyUseCase {
       createdById,
     });
 
-    return this.propertyRepository.save(property);
+    const saved = await this.propertyRepository.save(property);
+
+    await this.auditLogService.record({
+      userId: createdById,
+      affectedEntity: 'Property',
+      entityId: saved.id,
+      action: AuditAction.CREATE,
+      dataAfter: toAuditSnapshot(saved),
+    });
+
+    return saved;
   }
 }

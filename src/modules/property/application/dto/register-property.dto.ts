@@ -135,8 +135,4 @@ export class RegisterPropertyDto {
   @IsString()
   @IsNotEmpty()
   publicPurpose: string;
-
-  // Temporary: will be extracted from the authenticated user (JWT guard) once the auth module exists.
-  @IsUUID()
-  createdById: string;
 }

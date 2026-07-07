@@ -1,5 +1,10 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
-import { ApprovePropertyDto } from '../../application/dto/approve-property.dto';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/infrastructure/guards/roles.guard';
+import { CurrentUser } from '../../../auth/interface/decorators/current-user.decorator';
+import { Roles } from '../../../auth/interface/decorators/roles.decorator';
+import type { AuthenticatedUser } from '../../../auth/infrastructure/strategies/jwt.strategy';
+import { Role } from '../../../user/domain/enums/role.enum';
 import { ListPropertiesDto } from '../../application/dto/list-properties.dto';
 import { RegisterPropertyDto } from '../../application/dto/register-property.dto';
 import { ApprovePropertyUseCase } from '../../application/use-cases/approve-property.use-case';
@@ -10,6 +15,7 @@ import { RegisterPropertyUseCase } from '../../application/use-cases/register-pr
 import { PropertyPresenter } from '../presenters/property.presenter';
 
 @Controller('properties')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PropertyController {
   constructor(
     private readonly registerPropertyUseCase: RegisterPropertyUseCase,
@@ -21,32 +27,37 @@ export class PropertyController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() dto: RegisterPropertyDto) {
-    const property = await this.registerPropertyUseCase.execute(dto, dto.createdById);
+  @Roles(Role.REGISTRATION, Role.ADMINISTRATION)
+  async register(@Body() dto: RegisterPropertyDto, @CurrentUser() user: AuthenticatedUser) {
+    const property = await this.registerPropertyUseCase.execute(dto, user.id);
     return PropertyPresenter.toHttp(property);
   }
 
   @Get()
+  @Roles(Role.REGISTRATION, Role.VIEWER, Role.APPROVAL, Role.ADMINISTRATION)
   async list(@Query() query: ListPropertiesDto) {
     const page = await this.listPropertiesUseCase.execute(query);
     return PropertyPresenter.toHttpList(page);
   }
 
   @Get(':id')
+  @Roles(Role.REGISTRATION, Role.VIEWER, Role.APPROVAL, Role.ADMINISTRATION)
   async get(@Param('id') id: string) {
     const property = await this.getPropertyUseCase.execute(id);
     return PropertyPresenter.toHttp(property);
   }
 
   @Patch(':id/approve')
-  async approve(@Param('id') id: string, @Body() dto: ApprovePropertyDto) {
-    const property = await this.approvePropertyUseCase.execute(id, dto.approvedById);
+  @Roles(Role.APPROVAL, Role.ADMINISTRATION)
+  async approve(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const property = await this.approvePropertyUseCase.execute(id, user.id);
     return PropertyPresenter.toHttp(property);
   }
 
   @Patch(':id/deactivate')
-  async deactivate(@Param('id') id: string) {
-    const property = await this.deactivatePropertyUseCase.execute(id);
+  @Roles(Role.APPROVAL, Role.ADMINISTRATION)
+  async deactivate(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const property = await this.deactivatePropertyUseCase.execute(id, user.id);
     return PropertyPresenter.toHttp(property);
   }
 }

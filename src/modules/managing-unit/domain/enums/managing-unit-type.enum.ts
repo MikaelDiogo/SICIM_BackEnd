@@ -1,0 +1,5 @@
+export enum ManagingUnitType {
+  SECRETARIAT = 'SECRETARIAT',
+  AUTARCHY = 'AUTARCHY',
+  FOUNDATION = 'FOUNDATION',
+}

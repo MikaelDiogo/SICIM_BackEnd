@@ -6,6 +6,7 @@ const STATUS_BY_TYPE: Record<DomainErrorType, HttpStatus> = {
   [DomainErrorType.VALIDATION]: HttpStatus.BAD_REQUEST,
   [DomainErrorType.CONFLICT]: HttpStatus.CONFLICT,
   [DomainErrorType.NOT_FOUND]: HttpStatus.NOT_FOUND,
+  [DomainErrorType.UNAUTHORIZED]: HttpStatus.UNAUTHORIZED,
 };
 
 @Catch(DomainError)

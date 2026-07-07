@@ -1,14 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { AuditAction } from '../../../audit-log/domain/enums/audit-action.enum';
+import { AuditLogService } from '../../../audit-log/application/services/audit-log.service';
 import { Property } from '../../domain/entities/property.entity';
 import { PropertyNotFoundError } from '../../domain/errors/property-not-found.error';
 import type { IPropertyRepository } from '../../domain/repositories/property.repository';
 import { PROPERTY_REPOSITORY } from '../../domain/repositories/property.repository';
+import { toAuditSnapshot } from './property-audit-snapshot';
 
 @Injectable()
 export class ApprovePropertyUseCase {
   constructor(
     @Inject(PROPERTY_REPOSITORY)
     private readonly propertyRepository: IPropertyRepository,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async execute(id: string, approvedById: string): Promise<Property> {
@@ -16,6 +20,19 @@ export class ApprovePropertyUseCase {
     if (!property) {
       throw new PropertyNotFoundError(id);
     }
-    return this.propertyRepository.save(property.approve(approvedById));
+
+    const dataBefore = toAuditSnapshot(property);
+    const saved = await this.propertyRepository.save(property.approve(approvedById));
+
+    await this.auditLogService.record({
+      userId: approvedById,
+      affectedEntity: 'Property',
+      entityId: saved.id,
+      action: AuditAction.APPROVE,
+      dataBefore,
+      dataAfter: toAuditSnapshot(saved),
+    });
+
+    return saved;
   }
 }
