@@ -1,0 +1,6 @@
+export enum PropertyStatus {
+  DRAFT = 'DRAFT',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  APPROVED = 'APPROVED',
+  INACTIVE = 'INACTIVE',
+}

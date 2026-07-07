@@ -1,6 +1,15 @@
+export enum DomainErrorType {
+  VALIDATION = 'VALIDATION',
+  CONFLICT = 'CONFLICT',
+  NOT_FOUND = 'NOT_FOUND',
+}
+
 export abstract class DomainError extends Error {
-  constructor(message: string) {
+  readonly type: DomainErrorType;
+
+  constructor(message: string, type: DomainErrorType = DomainErrorType.VALIDATION) {
     super(message);
     this.name = this.constructor.name;
+    this.type = type;
   }
 }
