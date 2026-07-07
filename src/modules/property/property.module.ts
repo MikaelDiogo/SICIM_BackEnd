@@ -7,7 +7,9 @@ import { ApprovePropertyUseCase } from './application/use-cases/approve-property
 import { DeactivatePropertyUseCase } from './application/use-cases/deactivate-property.use-case';
 import { GetPropertyUseCase } from './application/use-cases/get-property.use-case';
 import { ListPropertiesUseCase } from './application/use-cases/list-properties.use-case';
+import { RecalculateDepreciationUseCase } from './application/use-cases/recalculate-depreciation.use-case';
 import { RegisterPropertyUseCase } from './application/use-cases/register-property.use-case';
+import { UpdatePropertyUseCase } from './application/use-cases/update-property.use-case';
 import { PROPERTY_REPOSITORY } from './domain/repositories/property.repository';
 import { PropertyTypeormRepository } from './infrastructure/persistence/property-typeorm.repository';
 import { PropertyOrmEntity } from './infrastructure/persistence/property.orm-entity';
@@ -27,6 +29,8 @@ import { PropertyController } from './interface/controllers/property.controller'
     GetPropertyUseCase,
     ApprovePropertyUseCase,
     DeactivatePropertyUseCase,
+    UpdatePropertyUseCase,
+    RecalculateDepreciationUseCase,
     {
       provide: PROPERTY_REPOSITORY,
       useClass: PropertyTypeormRepository,

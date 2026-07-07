@@ -15,8 +15,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         password: config.get<string>('DB_PASSWORD', 'sicim_dev_pass'),
         database: config.get<string>('DB_NAME', 'sicim'),
         autoLoadEntities: true,
-        // Só em desenvolvimento — em produção o schema evolui via migrations.
-        synchronize: config.get<string>('NODE_ENV', 'development') !== 'production',
+        migrations: [__dirname + '/migrations/*.{js,ts}'],
+        // Schema changes go through versioned migrations, run automatically on boot.
+        synchronize: false,
+        migrationsRun: true,
       }),
     }),
   ],

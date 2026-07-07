@@ -89,14 +89,7 @@ export class Property {
   }
 
   static create(props: Omit<PropertyProps, 'status' | 'accumulatedDepreciation' | 'createdAt' | 'updatedAt'>): Property {
-    if (props.builtArea > props.totalArea) {
-      throw new InvalidAreaError(props.builtArea, props.totalArea);
-    }
-
-    const needsContract = POSSESSION_TYPES_WITH_CONTRACT.includes(props.possessionType);
-    if (needsContract && !props.possessionContract) {
-      throw new PossessionContractRequiredError(props.possessionType);
-    }
+    Property.validateInvariants(props.builtArea, props.totalArea, props.possessionType, props.possessionContract);
 
     const now = new Date();
 
@@ -112,6 +105,22 @@ export class Property {
   // Reconstitutes the entity from persisted data (does not apply creation invariants)
   static reconstitute(props: PropertyProps): Property {
     return new Property(props);
+  }
+
+  private static validateInvariants(
+    builtArea: number,
+    totalArea: number,
+    possessionType: PossessionType,
+    possessionContract?: PossessionContract,
+  ): void {
+    if (builtArea > totalArea) {
+      throw new InvalidAreaError(builtArea, totalArea);
+    }
+
+    const needsContract = POSSESSION_TYPES_WITH_CONTRACT.includes(possessionType);
+    if (needsContract && !possessionContract) {
+      throw new PossessionContractRequiredError(possessionType);
+    }
   }
 
   get netBookValue(): MonetaryValue {
@@ -130,6 +139,31 @@ export class Property {
     return Property.reconstitute({
       ...this.toProps(),
       status: PropertyStatus.INACTIVE,
+      updatedAt: new Date(),
+    });
+  }
+
+  update(
+    changes: Partial<
+      Omit<PropertyProps, 'id' | 'registrationNumber' | 'status' | 'createdById' | 'createdAt' | 'updatedAt' | 'accumulatedDepreciation'>
+    >,
+  ): Property {
+    const merged = { ...this.toProps(), ...changes };
+
+    Property.validateInvariants(
+      merged.builtArea,
+      merged.totalArea,
+      merged.possessionType,
+      merged.possessionContract,
+    );
+
+    return Property.reconstitute({ ...merged, updatedAt: new Date() });
+  }
+
+  withRecalculatedDepreciation(accumulatedDepreciation: MonetaryValue): Property {
+    return Property.reconstitute({
+      ...this.toProps(),
+      accumulatedDepreciation,
       updatedAt: new Date(),
     });
   }

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/infrastructure/guards/roles.guard';
 import { CurrentUser } from '../../../auth/interface/decorators/current-user.decorator';
@@ -7,13 +8,18 @@ import type { AuthenticatedUser } from '../../../auth/infrastructure/strategies/
 import { Role } from '../../../user/domain/enums/role.enum';
 import { ListPropertiesDto } from '../../application/dto/list-properties.dto';
 import { RegisterPropertyDto } from '../../application/dto/register-property.dto';
+import { UpdatePropertyDto } from '../../application/dto/update-property.dto';
 import { ApprovePropertyUseCase } from '../../application/use-cases/approve-property.use-case';
 import { DeactivatePropertyUseCase } from '../../application/use-cases/deactivate-property.use-case';
 import { GetPropertyUseCase } from '../../application/use-cases/get-property.use-case';
 import { ListPropertiesUseCase } from '../../application/use-cases/list-properties.use-case';
+import { RecalculateDepreciationUseCase } from '../../application/use-cases/recalculate-depreciation.use-case';
 import { RegisterPropertyUseCase } from '../../application/use-cases/register-property.use-case';
+import { UpdatePropertyUseCase } from '../../application/use-cases/update-property.use-case';
 import { PropertyPresenter } from '../presenters/property.presenter';
 
+@ApiTags('properties')
+@ApiBearerAuth()
 @Controller('properties')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PropertyController {
@@ -23,6 +29,8 @@ export class PropertyController {
     private readonly getPropertyUseCase: GetPropertyUseCase,
     private readonly approvePropertyUseCase: ApprovePropertyUseCase,
     private readonly deactivatePropertyUseCase: DeactivatePropertyUseCase,
+    private readonly updatePropertyUseCase: UpdatePropertyUseCase,
+    private readonly recalculateDepreciationUseCase: RecalculateDepreciationUseCase,
   ) {}
 
   @Post()
@@ -58,6 +66,24 @@ export class PropertyController {
   @Roles(Role.APPROVAL, Role.ADMINISTRATION)
   async deactivate(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     const property = await this.deactivatePropertyUseCase.execute(id, user.id);
+    return PropertyPresenter.toHttp(property);
+  }
+
+  @Patch(':id')
+  @Roles(Role.REGISTRATION, Role.ADMINISTRATION)
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePropertyDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const property = await this.updatePropertyUseCase.execute(id, dto, user.id);
+    return PropertyPresenter.toHttp(property);
+  }
+
+  @Patch(':id/recalculate-depreciation')
+  @Roles(Role.ADMINISTRATION)
+  async recalculateDepreciation(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const property = await this.recalculateDepreciationUseCase.execute(id, user.id);
     return PropertyPresenter.toHttp(property);
   }
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '../auth/auth.module';
 import { GetManagingUnitUseCase } from './application/use-cases/get-managing-unit.use-case';
 import { ListManagingUnitsUseCase } from './application/use-cases/list-managing-units.use-case';
 import { RegisterManagingUnitUseCase } from './application/use-cases/register-managing-unit.use-case';
@@ -9,7 +10,7 @@ import { ManagingUnitOrmEntity } from './infrastructure/persistence/managing-uni
 import { ManagingUnitController } from './interface/controllers/managing-unit.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ManagingUnitOrmEntity])],
+  imports: [TypeOrmModule.forFeature([ManagingUnitOrmEntity]), AuthModule],
   controllers: [ManagingUnitController],
   providers: [
     RegisterManagingUnitUseCase,
