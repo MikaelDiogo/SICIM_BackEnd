@@ -4,6 +4,7 @@ export class InitialSchema1783438095791 implements MigrationInterface {
     name = 'InitialSchema1783438095791'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS postgis`);
         await queryRunner.query(`CREATE TABLE "audit_logs" ("id" uuid NOT NULL, "userId" uuid NOT NULL, "affectedEntity" character varying(100) NOT NULL, "entityId" uuid NOT NULL, "action" "public"."audit_logs_action_enum" NOT NULL, "dataBefore" jsonb, "dataAfter" jsonb, "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL, "sourceIp" character varying(45), CONSTRAINT "PK_1bb179d048bbc581caa3b013439" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_b054efb3457218f87473bc297f" ON "audit_logs"  ("affectedEntity") `);
         await queryRunner.query(`CREATE INDEX "IDX_f23279fad63453147a8efb46cf" ON "audit_logs"  ("entityId") `);
