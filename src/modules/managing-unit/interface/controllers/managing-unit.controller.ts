@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/infrastructure/guards/roles.guard';
@@ -38,7 +38,7 @@ export class ManagingUnitController {
 
   @Get(':id')
   @Roles(Role.REGISTRATION, Role.VIEWER, Role.APPROVAL, Role.ADMINISTRATION)
-  async get(@Param('id') id: string) {
+  async get(@Param('id', ParseUUIDPipe) id: string) {
     const managingUnit = await this.getManagingUnitUseCase.execute(id);
     return ManagingUnitPresenter.toHttp(managingUnit);
   }

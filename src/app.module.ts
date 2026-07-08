@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
@@ -12,6 +14,8 @@ import { DatabaseModule } from './shared/infrastructure/database/database.module
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // Global default: 100 req/min per IP. Individual endpoints (e.g. login) tighten this further.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     DatabaseModule,
     UserModule,
     AuthModule,
@@ -20,6 +24,6 @@ import { DatabaseModule } from './shared/infrastructure/database/database.module
     PropertyModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

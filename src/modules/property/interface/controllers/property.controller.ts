@@ -1,4 +1,16 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/infrastructure/guards/roles.guard';
@@ -50,21 +62,21 @@ export class PropertyController {
 
   @Get(':id')
   @Roles(Role.REGISTRATION, Role.VIEWER, Role.APPROVAL, Role.ADMINISTRATION)
-  async get(@Param('id') id: string) {
+  async get(@Param('id', ParseUUIDPipe) id: string) {
     const property = await this.getPropertyUseCase.execute(id);
     return PropertyPresenter.toHttp(property);
   }
 
   @Patch(':id/approve')
   @Roles(Role.APPROVAL, Role.ADMINISTRATION)
-  async approve(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async approve(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     const property = await this.approvePropertyUseCase.execute(id, user.id);
     return PropertyPresenter.toHttp(property);
   }
 
   @Patch(':id/deactivate')
   @Roles(Role.APPROVAL, Role.ADMINISTRATION)
-  async deactivate(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async deactivate(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     const property = await this.deactivatePropertyUseCase.execute(id, user.id);
     return PropertyPresenter.toHttp(property);
   }
@@ -72,7 +84,7 @@ export class PropertyController {
   @Patch(':id')
   @Roles(Role.REGISTRATION, Role.ADMINISTRATION)
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePropertyDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
@@ -82,7 +94,7 @@ export class PropertyController {
 
   @Patch(':id/recalculate-depreciation')
   @Roles(Role.ADMINISTRATION)
-  async recalculateDepreciation(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async recalculateDepreciation(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     const property = await this.recalculateDepreciationUseCase.execute(id, user.id);
     return PropertyPresenter.toHttp(property);
   }
